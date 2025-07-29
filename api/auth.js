@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Allow', 'GET, POST, PUT, DELETE');
+  res.setHeader('Allow', 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -131,10 +131,8 @@ export default async function handler(req, res) {
       res.status(200).json({ message: 'Logged out successfully' });
       
     } else {
-      res.status(400).json({ 
-        message: 'Invalid action parameter',
-        validActions: ['user (GET)', 'register (POST)', 'login (POST)', 'logout (POST/GET)']
-      });
+      res.setHeader('Allow', 'GET, POST, OPTIONS');
+      return res.status(405).json({ message: 'Method not allowed' });
     }
   } catch (error) {
     console.error('Auth API error:', error);
