@@ -60,7 +60,7 @@ export default function Header() {
                 )}
                 <Button 
                   variant="outline"
-                  onClick={() => window.location.href = "/api/auth/logout"}
+                  onClick={() => window.location.href = "/api/auth?action=logout"}
                 >
                   Sign Out
                 </Button>
@@ -127,7 +127,7 @@ export default function Header() {
                       <Button 
                         variant="outline"
                         onClick={() => {
-                          window.location.href = "/api/auth/logout";
+                          window.location.href = "/api/auth?action=logout";
                           setIsOpen(false);
                         }}
                         className="w-full"

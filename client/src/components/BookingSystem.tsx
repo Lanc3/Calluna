@@ -66,28 +66,28 @@ export default function BookingSystem() {
   });
 
   const { data: locations } = useQuery<RestaurantLocation[]>({
-    queryKey: ["/api/locations"],
+    queryKey: ["/api/restaurant?type=locations"],
     retry: false,
   });
 
   const { data: tables } = useQuery<Table[]>({
-    queryKey: ["/api/tables"],
+    queryKey: ["/api/restaurant?type=tables"],
     retry: false,
   });
 
   const { data: existingBookings } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings/date", bookingDate],
+    queryKey: ["/api/admin/bookings", bookingDate],
     enabled: !!bookingDate,
     retry: false,
   });
 
   const createBookingMutation = useMutation({
     mutationFn: async (bookingData: Omit<BookingFormData, 'seatingPreference'>) => {
-      const response = await apiRequest("POST", "/api/bookings", bookingData);
+      const response = await apiRequest("POST", "/api/admin/bookings", bookingData);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bookings/date"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/bookings"] });
       setStep(4); // Success step
       toast({
         title: "Booking Confirmed!",

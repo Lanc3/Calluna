@@ -44,11 +44,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      const res = await apiRequest("POST", "/api/auth?action=login", credentials);
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/auth/user"], user);
+      queryClient.setQueryData(["/api/auth?action=user"], user);
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
@@ -66,11 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData) => {
-      const res = await apiRequest("POST", "/api/auth/register", credentials);
+      const res = await apiRequest("POST", "/api/auth?action=register", credentials);
       return await res.json();
     },
     onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/auth/user"], user);
+      queryClient.setQueryData(["/api/auth?action=user"], user);
       toast({
         title: "Account created!",
         description: "Welcome to Calluna Bar & Grill admin panel.",
@@ -89,10 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       // Use window.location instead of fetch to handle redirect
-      window.location.href = "/api/auth/logout";
+      window.location.href = "/api/auth?action=logout";
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/user"], null);
+      queryClient.setQueryData(["/api/auth?action=user"], null);
     },
   });
 

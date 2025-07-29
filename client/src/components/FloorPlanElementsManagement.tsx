@@ -65,7 +65,7 @@ export default function FloorPlanElementsManagement({ selectedLocationId: initia
   });
 
   const { data: tables } = useQuery<Table[]>({
-    queryKey: ["/api/tables"],
+    queryKey: ["/api/restaurant?type=tables"],
     retry: false,
   });
 

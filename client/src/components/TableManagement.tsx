@@ -44,11 +44,11 @@ export default function TableManagement() {
   const queryClient = useQueryClient();
 
   const { data: tables, isLoading } = useQuery<Table[]>({
-    queryKey: ["/api/admin/tables"],
+    queryKey: ["/api/restaurant?type=tables"],
   });
 
   const { data: locations } = useQuery<RestaurantLocation[]>({
-    queryKey: ["/api/locations"],
+    queryKey: ["/api/restaurant?type=locations"],
   });
 
   const form = useForm<TableFormData>({
@@ -77,8 +77,7 @@ export default function TableManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tables"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/tables"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/restaurant?type=tables"] });
       toast({ title: "Success", description: "Table created successfully" });
       form.reset();
       setIsAdding(false);
@@ -94,8 +93,7 @@ export default function TableManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tables"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/tables"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/restaurant?type=tables"] });
       toast({ title: "Success", description: "Table updated successfully" });
       setEditingTable(null);
     },
@@ -109,8 +107,7 @@ export default function TableManagement() {
       await apiRequest("DELETE", `/api/admin/tables/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tables"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/tables"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/restaurant?type=tables"] });
       toast({ title: "Success", description: "Table deleted successfully" });
     },
     onError: (error: Error) => {

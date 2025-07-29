@@ -136,11 +136,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+### API Consolidation & Cleanup (January 29, 2025)
+- **Complete Code Cleanup** - Removed all unused API files and server directory after serverless migration
+- **API Consolidation for Vercel Limits** - Consolidated from 15+ individual endpoints to just 5 serverless functions:
+  - `/api/auth.js` - Authentication (login, register, logout, user)
+  - `/api/menu.js` - Menu categories and items management
+  - `/api/restaurant.js` - Tables, locations, gallery, contact, hours
+  - `/api/admin.js` - All admin CRUD operations and bookings
+  - `/api/test.js` - Development testing endpoint
+- **Frontend API Updates** - Updated all client components to use consolidated API endpoints with query parameters
+- **Unused File Removal** - Removed obsolete server files, duplicate auth hooks, and unused components
+- **Clean Architecture** - Achieved minimal file structure optimized for Vercel deployment under 12 function limit
+
 ### Serverless Architecture Migration (January 29, 2025)
 - **Complete Express.js to Vercel Serverless Migration** - Rewrote entire backend from Express server to individual serverless functions
 - **Database-Connected API Endpoints** - Each API endpoint now connects directly to Neon PostgreSQL using Drizzle ORM
 - **Stateless Authentication System** - Removed Express sessions in favor of stateless authentication approach
-- **Individual Function Files** - Created separate serverless functions for all API routes (gallery, menu, tables, locations, contact, hours, auth)
 - **Direct Database Queries** - Each endpoint performs its own database connection and queries for optimal serverless performance
 - **Proper CORS Configuration** - Added comprehensive CORS headers to all serverless functions for cross-origin requests
 - **Environment Variable Validation** - All functions validate DATABASE_URL presence before attempting database operations
