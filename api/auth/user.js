@@ -1,10 +1,3 @@
-<<<<<<< HEAD:api/auth/user.ts
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-// import { verifyJwt } from '../../lib/jwt'; // implement JWT verification if needed
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
- res.setHeader('Access-Control-Allow-Origin', '*');
-=======
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import { eq } from 'drizzle-orm';
@@ -15,7 +8,6 @@ neonConfig.webSocketConstructor = ws;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
->>>>>>> d02282a (Migrate backend APIs to serverless functions and enable database connectivity):api/auth/user.js
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -39,5 +31,5 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Auth user API error:', error);
     res.status(500).json({ message: 'Failed to get user' });
-  };
+  }
 }

@@ -52,19 +52,7 @@ export function setupAuth(app: Express) {
   };
 
   app.set("trust proxy", 1);
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "default_secret", // Use a strong secret in production!
-      resave: false,
-      saveUninitialized: false,
-      store: sessionStore,
-      cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: sessionTtl,
-      },
-    })
-  );
+  app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
 
