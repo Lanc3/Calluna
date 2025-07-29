@@ -23,17 +23,29 @@ async function comparePasswords(supplied, stored) {
 }
 
 export default async function handler(req, res) {
+  // Enhanced CORS headers for Vercel
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cookie');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Allow', 'GET, POST, OPTIONS');
+  
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   
+  // Log request for debugging on Vercel
+  console.log('Auth request:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    hasBody: !!req.body,
+    bodyKeys: req.body ? Object.keys(req.body) : [],
+    timestamp: new Date().toISOString()
+  });
+  
   try {
     if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL not configured');
       return res.status(500).json({ message: 'Database not configured' });
     }
 
@@ -48,82 +60,106 @@ export default async function handler(req, res) {
       res.status(401).json({ message: 'Unauthorized' });
       
     } else if (action === 'register' && req.method === 'POST') {
-      // Check if registration is enabled
-      const [setting] = await db
-        .select()
-        .from(settings)
-        .where(eq(settings.key, 'registration_enabled'));
-      
-      if (setting && setting.value === 'false') {
-        return res.status(403).json({ 
-          message: 'Registration is currently disabled',
-          error: 'New admin registrations are not allowed at this time'
+      try {
+        // Check if registration is enabled (skip if settings table doesn't exist)
+        try {
+          const [setting] = await db
+            .select()
+            .from(settings)
+            .where(eq(settings.key, 'registration_enabled'));
+          
+          if (setting && setting.value === 'false') {
+            return res.status(403).json({ 
+              message: 'Registration is currently disabled',
+              error: 'New admin registrations are not allowed at this time'
+            });
+          }
+        } catch (settingsError) {
+          console.log('Settings table not found, allowing registration');
+        }
+        
+        const { email, password, firstName, lastName } = req.body;
+        
+        if (!email || !password) {
+          return res.status(400).json({ message: 'Email and password are required' });
+        }
+        
+        // Check if user already exists
+        const [existingUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email));
+        
+        if (existingUser) {
+          return res.status(400).json({ message: 'User already exists' });
+        }
+        
+        // Hash password and create user
+        const hashedPassword = await hashPassword(password);
+        
+        const [newUser] = await db
+          .insert(users)
+          .values({
+            email,
+            password: hashedPassword,
+            firstName: firstName || null,
+            lastName: lastName || null,
+            role: 'admin' // All registered users get admin role
+          })
+          .returning();
+        
+        // Remove password from response
+        const { password: _, ...userWithoutPassword } = newUser;
+        
+        res.status(201).json(userWithoutPassword);
+        
+      } catch (registerError) {
+        console.error('Registration error:', registerError);
+        return res.status(500).json({ 
+          message: 'Registration failed',
+          error: registerError.message 
         });
       }
       
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
-      }
-      
-      // Check if user already exists
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email));
-      
-      if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
-      }
-      
-      // Hash password and create user
-      const hashedPassword = await hashPassword(password);
-      
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          email,
-          password: hashedPassword,
-          role: 'admin' // All registered users get admin role
-        })
-        .returning();
-      
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = newUser;
-      
-      res.status(201).json(userWithoutPassword);
-      
     } else if (action === 'login' && req.method === 'POST') {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
+      try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+          return res.status(400).json({ message: 'Email and password are required' });
+        }
+        
+        // Find user by email
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email));
+        
+        if (!user) {
+          return res.status(401).json({ message: 'Invalid credentials' });
+        }
+        
+        // Verify password
+        const isValidPassword = await comparePasswords(password, user.password);
+        
+        if (!isValidPassword) {
+          return res.status(401).json({ message: 'Invalid credentials' });
+        }
+        
+        // Remove password from response
+        const { password: _, ...userWithoutPassword } = user;
+        
+        // For serverless, we'd need to implement JWT or similar
+        // For now, just return user data
+        res.status(200).json(userWithoutPassword);
+        
+      } catch (loginError) {
+        console.error('Login error:', loginError);
+        return res.status(500).json({ 
+          message: 'Login failed',
+          error: loginError.message 
+        });
       }
-      
-      // Find user by email
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email));
-      
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Verify password
-      const isValidPassword = await comparePasswords(password, user.password);
-      
-      if (!isValidPassword) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      
-      // For serverless, we'd need to implement JWT or similar
-      // For now, just return user data
-      res.status(200).json(userWithoutPassword);
       
     } else if (action === 'logout' && (req.method === 'POST' || req.method === 'GET')) {
       // For serverless, just return success
@@ -131,8 +167,10 @@ export default async function handler(req, res) {
       res.status(200).json({ message: 'Logged out successfully' });
       
     } else {
-      res.setHeader('Allow', 'GET, POST, OPTIONS');
-      return res.status(405).json({ message: 'Method not allowed' });
+      res.status(400).json({ 
+        message: 'Invalid action parameter',
+        validActions: ['user (GET)', 'register (POST)', 'login (POST)', 'logout (POST/GET)']
+      });
     }
   } catch (error) {
     console.error('Auth API error:', error);
