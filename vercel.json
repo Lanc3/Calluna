@@ -1,11 +1,4 @@
-{"functions": {
-    "api/*.js": {
-      "runtime": "@vercel/node@20"
-    },
-    "api/**/*.js": {
-      "runtime": "@vercel/node@20"
-    }
-  },
+{
   "builds": [
     {
       "src": "package.json",
